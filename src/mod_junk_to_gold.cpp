@@ -1,6 +1,8 @@
 #include "Chat.h"
 #include "Player.h"
 #include "ScriptMgr.h"
+#include "DatabaseEnv.h"
+#include "ItemTemplate.h"
 
 class JunkToGold : public PlayerScript
 {
@@ -17,6 +19,18 @@ public:
         if (item->GetTemplate()->Quality == ITEM_QUALITY_POOR)
         {
             SendTransactionInformation(player, item, count);
+
+            // If this junk item is armor/weapon, record the appearance for transmogrification collection
+            if (player->GetSession())
+            {
+                ItemTemplate const* proto = item->GetTemplate();
+                if (proto && (proto->Class == ITEM_CLASS_ARMOR || proto->Class == ITEM_CLASS_WEAPON))
+                {
+                    uint32 accountId = player->GetSession()->GetAccountId();
+                    CharacterDatabase.Execute("INSERT IGNORE INTO custom_unlocked_appearances (account_id, item_template_id) VALUES ({}, {})", accountId, proto->ItemId);
+                }
+            }
+
             player->ModifyMoney(item->GetTemplate()->SellPrice * count);
             player->DestroyItem(item->GetBagSlot(), item->GetSlot(), true);
         }
