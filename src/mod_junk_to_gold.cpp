@@ -3,6 +3,7 @@
 #include "ScriptMgr.h"
 #include "DatabaseEnv.h"
 #include "ItemTemplate.h"
+#include "Transmogrification.h"
 
 class JunkToGold : public PlayerScript
 {
@@ -31,7 +32,10 @@ public:
                     accountId = sCharacterCache->GetCharacterAccountIdByGuid(player->GetGUID());
 
                 if (accountId)
+                {
                     CharacterDatabase.Execute("INSERT IGNORE INTO custom_unlocked_appearances (account_id, item_template_id) VALUES ({}, {})", accountId, proto->ItemId);
+                    sTransmogrification->AddCollectedAppearance(accountId, proto->ItemId);
+                }
             }
 
             player->ModifyMoney(item->GetTemplate()->SellPrice * count);
